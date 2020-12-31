@@ -4,7 +4,7 @@ class ReLU : # ReLU - Rectified Linear Unit
 
 	def __init__(self) :
 		self.__Name__ = 'ReLU' # __Name__ initialization
-		self.__type__ = 'activation'
+		self.__type__ = 'activation' # type of Layer
 
 	def feed(self,X) :
 
