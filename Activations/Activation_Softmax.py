@@ -14,4 +14,4 @@ class Softmax :
 		"""
 
 		e_x = np.exp(X - np.max(X))
-    	return e_x / e_x.sum(axis=0)
+		return e_x / e_x.sum(axis=0)
