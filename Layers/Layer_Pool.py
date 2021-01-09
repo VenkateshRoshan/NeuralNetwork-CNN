@@ -38,6 +38,8 @@ class MaxPool2D :
 		else :
 			self.input_shape = input_shape
 
+		self.output = []
+
 		self.output_shape = (None,int((self.input_shape[1]-self.KERNEL_SIZE+1)/self.STRIDES),int((self.input_shape[2]-self.KERNEL_SIZE+1)/self.STRIDES),int(self.input_shape[3]))
 
 	def maxpool(self,input_batch) :
@@ -45,11 +47,29 @@ class MaxPool2D :
 		W,H,D = self.output_shape[1:]
 		for X in input_batch :
 			res = np.zeros((W,H,D))
-			for i in range(W) :
-				for j in range(H) :
-					res[i,j] = np.max(np.max(X[i*self.KERNEL_SIZE:(i+1)*self.KERNEL_SIZE,j*self.KERNEL_SIZE:(j+1)*self.KERNEL_SIZE].T,axis=1),axis=1)
+			w,h,d = 0 , 0 , 0
+			for i in range(0,self.input_shape[1]-self.KERNEL_SIZE,self.STRIDES) :
+				for j in range(0,self.input_shape[2]-self.KERNEL_SIZE,self.STRIDES) :
+					res[w,h] = np.max(np.max(X[i:i+self.KERNEL_SIZE,j:j+self.KERNEL_SIZE].T,axis=1),axis=1)
+					print(res[w,h])
+					h += 1
+					if h == H :
+						break
+				w += 1
+				h = 0
+				if w == W :
+					break
+
+			# for i in range(W) :
+			# 	for j in range(H) :
+			# 		if ((i+1)*self.KERNEL_SIZE- (i)*self.KERNEL_SIZE) > self.KERNEL_SIZE and ((j+1)*self.KERNEL_SIZE- (j)*self.KERNEL_SIZE) > self.KERNEL_SIZE :
+			# 			res[i,j] = np.max(np.max(X[i*self.KERNEL_SIZE:(i+1)*self.KERNEL_SIZE,j*self.KERNEL_SIZE:(j+1)*self.KERNEL_SIZE].T,axis=1),axis=1)
+			# 		# else :
+			# 		# 	res[i,j] = np.max(np.max(X[i*self.KERNEL_SIZE:,j*self.KERNEL_SIZE:].T,axis=1),axis=1)
 
 			output_batch.append(res)
+			for o in output_batch :
+				self.output.append(o)
 		return output_batch
 
 	def feed(self,input_batch) :
