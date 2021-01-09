@@ -5,6 +5,10 @@ from matplotlib import pyplot as plt
 
 class Sequential() :
 
+	"""
+		arranging every layer to prepare a model
+	"""
+
 	def __init__ (self) :
 		self.Layers = []
 		self.input_shape = None
@@ -25,15 +29,16 @@ class Sequential() :
 			"""
 				Applying Activation functions to the output of data which is feeded
 			"""
-			if Layer.ACTIVATION_FUNCTION.lower() == 'Relu'.lower() :
-				relu = ReLU()
-				self.output_batch = relu.feed(self.output_batch)
-			elif Layer.ACTIVATION_FUNCTION.lower() == 'Softmax'.lower() :
-				softmax = Softmax()
-				self.output_batch = softmax.feed(self.output_batch)
-			elif Layer.ACTIVATION_FUNCTION.lower() == 'Sigmoid'.lower() :
-				sigmoid = Sigmoid()
-				self.output_batch = sigmoid.feed(self.output_batch)
+			if Layer.__type__.lower() != 'pool' :
+				if Layer.ACTIVATION_FUNCTION.lower() == 'Relu'.lower() :
+					relu = ReLU()
+					self.output_batch = relu.feed(self.output_batch)
+				elif Layer.ACTIVATION_FUNCTION.lower() == 'Softmax'.lower() :
+					softmax = Softmax()
+					self.output_batch = softmax.feed(self.output_batch)
+				elif Layer.ACTIVATION_FUNCTION.lower() == 'Sigmoid'.lower() :
+					sigmoid = Sigmoid()
+					self.output_batch = sigmoid.feed(self.output_batch)
 
 		return self.output_batch
 
@@ -69,46 +74,59 @@ class Sequential() :
 			"""
 				every epoch train data and finding error rate
 			"""
-			co = 1
 			self.accuracy = 0
 			self.error = 0
 			for ind in range(0,N,self.batch_size) :
-				print(f'\r[','='*co,'>','.'*(int(400/self.batch_size)-co),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="")
+				print(f'\r[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="")
 				if ind+self.batch_size <= N :
 					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size])
 				elif ind+self.batch_size > N :
 					self.output_batch = self.feed(self.train_data[0][ind:])
-				co += 1
 				for o in self.output_batch :
 					self.output.append(o)
 		print('\n')
 		self.output = np.array(self.output)
 		print(self.output.shape)
 
+	def Summary(self) :
+		print('Layer\t\t\tInput Shape\t\tOutput Shape')
+		for Layer in self.Layers :
+			print(Layer.Summary())
+
+	def plotImg(self) :
+		for Layer in self.Layers :
+			Layer.plotImg(Layer.output)
 
 def main() :
 	model = Sequential()
-	shape = (32,32,3)
+	shape = (75,75,3)
 	input = Input(shape)
-	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=3,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu'))
+	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu'))
+	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape))
+	model.Summary()
 	X_train = []
 	Y_train = []
 	Path = ['D:/Data/MultiDomain/Dataset/Animals/cats/','D:/Data/MultiDomain/Dataset/Animals/dogs/']
 	for i in Path :
+		co = 0
 		for j in os.listdir(i) :
 			img = cv2.imread(i+j)
 			img = cv2.resize(img,(shape[:2]))
 			X_train.append(img/255.)
 			Y_train.append(Path.index(i))
+			co += 1
+			if co == 2 :
+				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
 	print(f'X : {X_train.shape}, Y : {Y_train.shape}')
 	model.fit(train_data=(X_train,Y_train),epochs=1)
-	#print(model.Output)
+	model.plotImg()
 
 if __name__ == '__main__':
 	from Layers.Layer_Input import Input
 	from Layers.Layer_Conv import Conv2D
+	from Layers.Layer_Pool import MaxPool2D
 	from Activations.Activation_ReLU import ReLU
 	from Activations.Activation_Sigmoid import Sigmoid
 	from Activations.Activation_Softmax import Softmax
