@@ -5,7 +5,8 @@ import cv2
 class Flatten() :
 
 	def __init__(self,input_shape=None) :
-		self.__Name__ = 'flat'
+		self.__Name__ = 'flatten'
+		self.__type__ = 'flatten'
 		self.input_shape = input_shape
 		re = 1
 		for i in input_shape[1:] :
