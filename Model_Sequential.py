@@ -29,7 +29,7 @@ class Sequential() :
 			"""
 				Applying Activation functions to the output of data which is feeded
 			"""
-			if Layer.__type__.lower() != 'pool' :
+			if Layer.__type__.lower() != 'pool' and Layer.__type__.lower() != 'flatten' :
 				if Layer.ACTIVATION_FUNCTION.lower() == 'Relu'.lower() :
 					relu = ReLU()
 					self.output_batch = relu.feed(self.output_batch)
@@ -95,7 +95,8 @@ class Sequential() :
 
 	def plotImg(self) :
 		for Layer in self.Layers :
-			Layer.plotImg(Layer.output)
+			if Layer.__type__ == 'pool' or Layer.__type__ == 'convolving' :
+				Layer.plotImg(Layer.output)
 
 def main() :
 	model = Sequential()
@@ -103,6 +104,7 @@ def main() :
 	input = Input(shape)
 	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu')) # Conv layer feed
 	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
+	model.add(Flatten(input_shape=model.output_shape))
 	model.Summary()
 	X_train = []
 	Y_train = []
@@ -115,7 +117,7 @@ def main() :
 			X_train.append(img/255.)
 			Y_train.append(Path.index(i))
 			co += 1
-			if co == 2 :
+			if co == 10 :
 				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
@@ -128,6 +130,7 @@ if __name__ == '__main__':
 	from Layers.Layer_Input import Input
 	from Layers.Layer_Conv import Conv2D
 	from Layers.Layer_Pool import MaxPool2D
+	from Layers.Layer_Flatten import Flatten
 	from Activations.Activation_ReLU import ReLU
 	from Activations.Activation_Sigmoid import Sigmoid
 	from Activations.Activation_Softmax import Softmax
