@@ -101,8 +101,8 @@ def main() :
 	model = Sequential()
 	shape = (75,75,3)
 	input = Input(shape)
-	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu'))
-	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape))
+	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu')) # Conv layer feed
+	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
 	model.Summary()
 	X_train = []
 	Y_train = []
@@ -122,6 +122,7 @@ def main() :
 	print(f'X : {X_train.shape}, Y : {Y_train.shape}')
 	model.fit(train_data=(X_train,Y_train),epochs=1)
 	model.plotImg()
+
 
 if __name__ == '__main__':
 	from Layers.Layer_Input import Input
