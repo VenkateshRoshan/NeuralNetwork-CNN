@@ -19,13 +19,17 @@ class Sequential() :
 			self.input_shape = Layer.input_shape
 		self.output_shape = Layer.output_shape
 
-	def feed(self,X) :
+	def feed(self,X,WEIGHTS) :
 		self.output_batch = X
 		for Layer in self.Layers :
 			"""
 				Feeding data
 			"""
-			self.output_batch = Layer.feed(self.output_batch)
+			if Layer.__type__ == 'convolving' :
+				self.output_batch = Layer.feed(self.output_batch,WEIGHTS)
+			else :
+				self.output_batch = Layer.feed(self.output_batch)
+
 			"""
 				Applying Activation functions to the output of data which is feeded
 			"""
@@ -68,9 +72,10 @@ class Sequential() :
 
 		self.output = []
 
+		self.WEIGHTS = np.zeros(N)
+
 		for ep in range(epochs) :
 			print(f'\nEpoch {ep+1} : ')
-			self.WEIGHTS = []
 			"""
 				every epoch train data and finding error rate
 			"""
@@ -79,9 +84,9 @@ class Sequential() :
 			for ind in range(0,N,self.batch_size) :
 				print(f'\r[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="")
 				if ind+self.batch_size <= N :
-					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size])
+					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size],self.WEIGHTS[ind:ind+self.batch_size])
 				elif ind+self.batch_size > N :
-					self.output_batch = self.feed(self.train_data[0][ind:])
+					self.output_batch = self.feed(self.train_data[0][ind:],self.WEIGHTS[ind:])
 				for o in self.output_batch :
 					self.output.append(o)
 		print('\n')
@@ -117,7 +122,7 @@ def main() :
 			X_train.append(img/255.)
 			Y_train.append(Path.index(i))
 			co += 1
-			if co == 10 :
+			if co == 100 :
 				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
