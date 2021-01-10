@@ -22,6 +22,7 @@ class Sequential() :
 	def feed(self,X,WEIGHTS) :
 		self.output_batch = X
 		for Layer in self.Layers :
+			print(f'Feeding : {Layer.__Name__} ')
 			"""
 				Feeding data
 			"""
@@ -68,7 +69,6 @@ class Sequential() :
 		self.epochs = epochs
 
 		N = len(train_data[0]) # Length of train data
-		print(N)
 
 		self.output = []
 
@@ -82,7 +82,7 @@ class Sequential() :
 			self.accuracy = 0
 			self.error = 0
 			for ind in range(0,N,self.batch_size) :
-				print(f'\r[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="")
+				print(f'\r[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="\n")
 				if ind+self.batch_size <= N :
 					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size],self.WEIGHTS[ind:ind+self.batch_size])
 				elif ind+self.batch_size > N :
@@ -91,7 +91,7 @@ class Sequential() :
 					self.output.append(o)
 		print('\n')
 		self.output = np.array(self.output)
-		print(self.output.shape)
+		print('Shape : ',self.output.shape)
 
 	def Summary(self) :
 		print('Layer\t\t\tInput Shape\t\tOutput Shape')
@@ -131,6 +131,7 @@ def main() :
 	print(f'X : {X_train.shape}, Y : {Y_train.shape}')
 	model.fit(train_data=(X_train,Y_train),epochs=1)
 	model.plotImg()
+	print(model.output_shape)
 	print(model.output)
 
 
