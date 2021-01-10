@@ -25,7 +25,7 @@ class Sequential() :
 			"""
 				Feeding data
 			"""
-			if Layer.__type__ == 'convolving' :
+			if Layer.__type__ == 'convolving' or Layer.__type__ == 'dense' :
 				self.output_batch = Layer.feed(self.output_batch,WEIGHTS)
 			else :
 				self.output_batch = Layer.feed(self.output_batch)
@@ -110,6 +110,8 @@ def main() :
 	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu')) # Conv layer feed
 	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
 	model.add(Flatten(input_shape=model.output_shape))
+	model.add(Dense(32,ACTIVATION_FUNCTION='ReLU',input_shape=model.output_shape))
+	model.add(Dense(2,ACTIVATION_FUNCTION='Softmax',input_shape=model.output_shape))
 	model.Summary()
 	X_train = []
 	Y_train = []
@@ -122,13 +124,14 @@ def main() :
 			X_train.append(img/255.)
 			Y_train.append(Path.index(i))
 			co += 1
-			if co == 100 :
+			if co == 10 :
 				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
 	print(f'X : {X_train.shape}, Y : {Y_train.shape}')
 	model.fit(train_data=(X_train,Y_train),epochs=1)
 	model.plotImg()
+	print(model.output)
 
 
 if __name__ == '__main__':
@@ -136,6 +139,7 @@ if __name__ == '__main__':
 	from Layers.Layer_Conv import Conv2D
 	from Layers.Layer_Pool import MaxPool2D
 	from Layers.Layer_Flatten import Flatten
+	from Layers.Layer_Dense import Dense
 	from Activations.Activation_ReLU import ReLU
 	from Activations.Activation_Sigmoid import Sigmoid
 	from Activations.Activation_Softmax import Softmax
