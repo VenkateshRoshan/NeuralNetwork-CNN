@@ -41,11 +41,13 @@ class Dense() :
 		else :
 			self.ACTIVATION_FUNCTION = ACTIVATION_FUNCTION
 
+		self.output_shape = (input_shape[0],NUM_FILTERS)
+
 	def dense(self,input_batch,WEIGHTS) :
 		self.output_batch = []
 		self.weights = 0.10 * np.random.randn(len(input_batch),self.NUM_FILTERS)
 
-		for i in range(len(self.weights)) :
+		for i in range(len(WEIGHTS)) :
 			self.weights[i] += WEIGHTS[i]
 		
 		self.output_batch = np.dot(np.array(input_batch).T,self.weights)
