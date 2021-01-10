@@ -45,13 +45,11 @@ class Dense() :
 
 	def dense(self,input_batch,WEIGHTS) :
 		self.output_batch = []
-		self.weights = 0.10 * np.random.randn(len(input_batch),self.NUM_FILTERS)
-
-		for i in range(len(WEIGHTS)) :
-			self.weights[i] += WEIGHTS[i]
+		self.weights = 0.10 * np.random.randn(len(input_batch[0]),self.NUM_FILTERS)
 		
-		self.output_batch = np.dot(np.array(input_batch).T,self.weights)
+		self.output_batch = np.dot(np.array(input_batch),self.weights)
 
+		self.output_batch = (self.output_batch.T + WEIGHTS).T
 		return self.output_batch
 
 	def feed(self,X_train,WEIGHTS) :
