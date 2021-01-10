@@ -75,6 +75,9 @@ class Conv2D :
 		
 		output_batch = []
 		for x in range(len(input_batch)) :
+			"""
+				self.result initiated to zero again or else it gives same result again
+			"""
 			self.result = np.zeros((self.input_shape[1]-self.KERNEL_SIZE+1,self.input_shape[2]-self.KERNEL_SIZE+1,self.NUM_FILTERS))
 			for i in range(0,self.output_shape[1],self.STRIDES) :
 				for j in range(0,self.output_shape[1],self.STRIDES) :
