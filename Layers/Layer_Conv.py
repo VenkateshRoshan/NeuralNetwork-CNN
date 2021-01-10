@@ -70,12 +70,12 @@ class Conv2D :
 	def conv(self,input_batch,WEIGHTS) :
 
 		"""
-			Have to add WEIGHTS either trained or default to Filters for next epochs using filters size
+			adding WEIGHTS either trained or default to Filters for next epochs using filters size
 		"""
 		
 		output_batch = []
 		for x in range(len(input_batch)) :
-			#self.result = np.zeros((self.input_shape[1]-self.KERNEL_SIZE+1,self.input_shape[2]-self.KERNEL_SIZE+1,self.NUM_FILTERS))
+			self.result = np.zeros((self.input_shape[1]-self.KERNEL_SIZE+1,self.input_shape[2]-self.KERNEL_SIZE+1,self.NUM_FILTERS))
 			for i in range(0,self.output_shape[1],self.STRIDES) :
 				for j in range(0,self.output_shape[1],self.STRIDES) :
 					cur_reg = input_batch[x][i:i+self.KERNEL_SIZE,j:j+self.KERNEL_SIZE].T@self.Filters + WEIGHTS[x]
