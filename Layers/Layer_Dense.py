@@ -54,16 +54,16 @@ class Dense() :
 		self.WEIGHTS.append(weights)
 		
 		self.output_batch = np.dot(np.array(input_batch),weights)
-
-		self.output_batch = (self.output_batch.T + weights).T
 		return self.output_batch
 
 	def feed(self,X_train) :
 		return self.dense(X_train)
 
-	def feed_backward(self,out_err) :
+	def feed_backward(self,out_err,lr) :
 		self.input = np.array(self.input)
-		return np.dot(self.input.T,out_err)
+		input_error = np.dot(out_err,self.WEIGHTS.T)
+		self.WEIGHTS -= lr*np.dot(self.input.T,out_err)
+		return input_error
 
 	def Summary(self) :
 		print(f'{self.__Name__}\t\t{self.input_shape}\t\t{self.output_shape}')
