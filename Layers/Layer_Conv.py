@@ -67,7 +67,7 @@ class Conv2D :
 
 		self.output_shape = tuple([None]+list(self.result.shape))
 
-	def conv(self,input_batch,WEIGHTS) :
+	def conv(self,input_batch) :
 
 		"""
 			adding WEIGHTS either trained or default to Filters for next epochs using filters size
@@ -81,7 +81,7 @@ class Conv2D :
 			self.result = np.zeros((self.input_shape[1]-self.KERNEL_SIZE+1,self.input_shape[2]-self.KERNEL_SIZE+1,self.NUM_FILTERS))
 			for i in range(0,self.output_shape[1],self.STRIDES) :
 				for j in range(0,self.output_shape[1],self.STRIDES) :
-					cur_reg = input_batch[x][i:i+self.KERNEL_SIZE,j:j+self.KERNEL_SIZE].T@self.Filters + WEIGHTS[x]
+					cur_reg = input_batch[x][i:i+self.KERNEL_SIZE,j:j+self.KERNEL_SIZE].T@self.Filters
 					for c in range(self.NUM_FILTERS) :
 						self.result[i,j,c] = np.sum(cur_reg[c])
 
@@ -90,12 +90,12 @@ class Conv2D :
 				self.output.append(o)
 		return output_batch
 
-	def feed(self,X,WEIGHTS) :  
+	def feed(self,X) :  
 		"""
 			Feed to Neural Network with length of batch_size 
 			X is input batch to feed NN
 		"""		
-		return self.conv(X,WEIGHTS)
+		return self.conv(X)
 
 	def plotImg(self,X_train) :
 		for X in X_train :
