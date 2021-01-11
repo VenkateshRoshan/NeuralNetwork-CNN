@@ -43,17 +43,27 @@ class Dense() :
 
 		self.output_shape = (input_shape[0],NUM_FILTERS)
 
-	def dense(self,input_batch,WEIGHTS) :
-		self.output_batch = []
-		self.weights = 0.10 * np.random.randn(len(input_batch[0]),self.NUM_FILTERS)
-		
-		self.output_batch = np.dot(np.array(input_batch),self.weights)
+		self.input = []
 
-		self.output_batch = (self.output_batch.T + WEIGHTS).T
+		self.WEIGHTS = []
+
+	def dense(self,input_batch) :
+		self.output_batch = []
+		self.input.append(input_batch)
+		weights = 0.10 * np.random.randn(len(input_batch[0]),self.NUM_FILTERS) / np.sqrt(len(input_batch[0])+self.NUM_FILTERS)
+		self.WEIGHTS.append(weights)
+		
+		self.output_batch = np.dot(np.array(input_batch),weights)
+
+		self.output_batch = (self.output_batch.T + weights).T
 		return self.output_batch
 
-	def feed(self,X_train,WEIGHTS) :
-		return self.dense(X_train,WEIGHTS)
+	def feed(self,X_train) :
+		return self.dense(X_train)
+
+	def feed_backward(self,out_err) :
+		self.input = np.array(self.input)
+		return np.dot(self.input.T,out_err)
 
 	def Summary(self) :
 		print(f'{self.__Name__}\t\t{self.input_shape}\t\t{self.output_shape}')
