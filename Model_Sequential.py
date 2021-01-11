@@ -19,17 +19,14 @@ class Sequential() :
 			self.input_shape = Layer.input_shape
 		self.output_shape = Layer.output_shape
 
-	def feed(self,X,WEIGHTS) :
+	def feed(self,X) :
 		self.output_batch = X
 		for Layer in self.Layers :
-			print(f'Feeding : {Layer.__Name__} ')
+			#print(f'Feeding : {Layer.__Name__} ')
 			"""
 				Feeding data
 			"""
-			if Layer.__type__ == 'convolving' or Layer.__type__ == 'dense' :
-				self.output_batch = Layer.feed(self.output_batch,WEIGHTS)
-			else :
-				self.output_batch = Layer.feed(self.output_batch)
+			self.output_batch = Layer.feed(self.output_batch)
 
 			"""
 				Applying Activation functions to the output of data which is feeded
@@ -37,19 +34,20 @@ class Sequential() :
 			if Layer.__type__.lower() != 'pool' and Layer.__type__.lower() != 'flatten' :
 				if Layer.ACTIVATION_FUNCTION.lower() == 'Relu'.lower() :
 					relu = ReLU()
-					self.output_batch = relu.feed(self.output_batch)
+					self.output_batch = relu.feed(np.array(self.output_batch,dtype=np.float64))
 				elif Layer.ACTIVATION_FUNCTION.lower() == 'Softmax'.lower() :
 					softmax = Softmax()
-					self.output_batch = softmax.feed(self.output_batch)
+					self.output_batch = softmax.feed(np.array(self.output_batch,dtype=np.float64))
 				elif Layer.ACTIVATION_FUNCTION.lower() == 'Sigmoid'.lower() :
 					sigmoid = Sigmoid()
-					self.output_batch = sigmoid.feed(self.output_batch)
+					self.output_batch = sigmoid.feed(np.array(self.output_batch,dtype=np.float64))
 
 		return self.output_batch
 
 
-	def fit(self,train_data=None,validation_data=None,validation_split=0,batch_size=32,epochs=1) : 
-		print('Model Fitting')
+	def fit(self,train_data=None,validation_data=None,validation_split=0,batch_size=32,epochs=1,lr=0.1) : 
+		print('Model Fitting : ')
+		self.lr = lr
 
 		"""
 			Fitting model using train data
@@ -70,11 +68,8 @@ class Sequential() :
 
 		N = len(train_data[0]) # Length of train data
 
-		self.output = []
-
-		self.WEIGHTS = np.zeros(N)
-
 		for ep in range(epochs) :
+			self.output = []
 			print(f'\nEpoch {ep+1} : ')
 			"""
 				every epoch train data and finding error rate
@@ -82,21 +77,47 @@ class Sequential() :
 			self.accuracy = 0
 			self.error = 0
 			for ind in range(0,N,self.batch_size) :
-				print(f'\r[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']' , 'accuracy :',self.accuracy , 'error :' , self.error,end="\n")
+				print(f'\r','[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']',end="")
 				if ind+self.batch_size <= N :
-					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size],self.WEIGHTS[ind:ind+self.batch_size])
+					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size])
 				elif ind+self.batch_size > N :
-					self.output_batch = self.feed(self.train_data[0][ind:],self.WEIGHTS[ind:])
-				for o in self.output_batch :
-					self.output.append(o)
-		print('\n')
-		self.output = np.array(self.output)
-		print('Shape : ',self.output.shape)
+					self.output_batch = self.feed(self.train_data[0][ind:])
+				for o in range(len(self.output_batch)) :
+					self.output.append(self.output_batch[o])
+
+			print('\n')
+			self.output = np.array(self.output)
+			"""
+				Accuracy and Error Measuring
+			"""
+			co = 0
+			for i in range(N) :
+				pred_label = np.argmax(self.output[i])
+				if self.train_data[1][i] ==  pred_label:
+					co += 1
+			
+			self.accuracy = (co/N)*100
+			self.error = self.mse(np.argmax(self.output,axis=1),self.train_data[1])
+			out_err = self.mse_prime(np.argmax(self.output,axis=1),self.train_data[1])
+			for Layer in reversed(self.Layers) :
+				if Layer.__Name__ == 'Dense' :
+					out_err = self.mse_prime(out_err,self.train_data[1])
+			print('Accuracy :',self.accuracy , 'Error :' , self.error)
+			print(self.output)
+
+	def mse(self,y_true, y_pred):
+		"""
+			Mean Squared error
+		"""
+		return np.mean(np.power(y_true - y_pred, 2))
+
+	def mse_prime(self,y_true, y_pred):
+		return 2 * (y_pred - y_true) / y_pred.size
 
 	def Summary(self) :
 		print('Layer\t\t\tInput Shape\t\tOutput Shape')
 		for Layer in self.Layers :
-			print(Layer.Summary())
+			Layer.Summary()
 
 	def plotImg(self) :
 		for Layer in self.Layers :
@@ -105,17 +126,20 @@ class Sequential() :
 
 def main() :
 	model = Sequential()
-	shape = (75,75,3)
+	shape = (50,50,3)
 	input = Input(shape)
-	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=5,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu')) # Conv layer feed
+	model.add(Conv2D(NUM_FILTERS=16,KERNEL_SIZE=3,input_shape=input.output_shape,ACTIVATION_FUNCTION='Relu')) # Conv layer feed
+	model.add(Conv2D(NUM_FILTERS=32,KERNEL_SIZE=5,input_shape=model.output_shape)) # Conv layer feed
 	model.add(MaxPool2D(KERNEL_SIZE=3,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
+	model.add(Conv2D(NUM_FILTERS=64,KERNEL_SIZE=3,input_shape=model.output_shape)) # Conv layer feed
+	model.add(MaxPool2D(KERNEL_SIZE=5,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
 	model.add(Flatten(input_shape=model.output_shape))
 	model.add(Dense(32,ACTIVATION_FUNCTION='ReLU',input_shape=model.output_shape))
-	model.add(Dense(2,ACTIVATION_FUNCTION='Softmax',input_shape=model.output_shape))
+	model.add(Dense(2,ACTIVATION_FUNCTION='Sigmoid',input_shape=model.output_shape))
 	model.Summary()
 	X_train = []
 	Y_train = []
-	Path = ['D:/Data/MultiDomain/Dataset/Animals/cats/','D:/Data/MultiDomain/Dataset/Animals/dogs/']
+	Path = ['D:/Data/MultiDomain/Dataset/Animals/cats/','D:/Data/MultiDomain/Dataset/Animals/dogs/']#,'D:/Data/MultiDomain/Dataset/Animals/fox/']
 	for i in Path :
 		co = 0
 		for j in os.listdir(i) :
@@ -124,16 +148,14 @@ def main() :
 			X_train.append(img/255.)
 			Y_train.append(Path.index(i))
 			co += 1
-			if co == 10 :
+			if co == 1 :
 				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
 	print(f'X : {X_train.shape}, Y : {Y_train.shape}')
-	model.fit(train_data=(X_train,Y_train),epochs=1)
-	model.plotImg()
-	print(model.output_shape)
-	print(model.output)
-
+	model.fit(train_data=(X_train,Y_train),epochs=10)
+	#model.plotImg()
+	#print(model.output)
 
 if __name__ == '__main__':
 	from Layers.Layer_Input import Input
