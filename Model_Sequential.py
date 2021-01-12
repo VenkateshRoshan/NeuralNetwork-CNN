@@ -45,7 +45,7 @@ class Sequential() :
 		return self.output_batch
 
 
-	def fit(self,train_data=None,validation_data=None,validation_split=0,batch_size=32,epochs=1,lr=0.1) : 
+	def fit(self,train_data=None,validation_data=None,validation_split=0,batch_size=16,epochs=1,lr=0.1) : 
 		print('Model Fitting : ')
 		self.lr = lr
 
@@ -68,42 +68,53 @@ class Sequential() :
 
 		N = len(train_data[0]) # Length of train data
 
+		self.accuracy = 0
+		self.error = 0
+
 		for ep in range(epochs) :
 			self.output = []
 			print(f'\nEpoch {ep+1} : ')
 			"""
 				every epoch train data and finding error rate
 			"""
-			self.accuracy = 0
-			self.error = 0
-			for ind in range(0,N,self.batch_size) :
-				print(f'\r','[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']',end="")
-				if ind+self.batch_size <= N :
-					self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size])
-				elif ind+self.batch_size > N :
-					self.output_batch = self.feed(self.train_data[0][ind:])
-				for o in range(len(self.output_batch)) :
-					self.output.append(self.output_batch[o])
+			
+			# for ind in range(0,N,self.batch_size) :
+			# 	print(f'\r','[','='*int(ind/self.batch_size),'>','.'*(int(400/self.batch_size)-int(ind/self.batch_size)),']',end="")
+			# 	if ind+self.batch_size <= N :
+			# 		self.output_batch = self.feed(self.train_data[0][ind:ind+self.batch_size])
+			# 	elif ind+self.batch_size > N :
+			# 		self.output_batch = self.feed(self.train_data[0][ind:])
+			# 	for o in range(len(self.output_batch)) :
+			# 		self.output.append(self.output_batch[o])
 
-			print('\n')
+			# for x in range(len(self.train_data[0])) :
+			# 	print(x)
+			# 	self.output.append(self.feed(self.train_data[x]))
+
+			self.output = self.feed(self.train_data[0])
+
 			self.output = np.array(self.output)
 			"""
 				Accuracy and Error Measuring
 			"""
+			net_pred = []
 			co = 0
 			for i in range(N) :
-				pred_label = np.argmax(self.output[i])
-				if self.train_data[1][i] ==  pred_label:
-					co += 1
-			
+				net_pred.append(np.argsort(self.output[i]))
+				if np.argmax(self.train_data[1][i]) ==  np.argmax(self.output[i]) :
+					co += 1       
 			self.accuracy = (co/N)*100
-			self.error = self.mse(np.argmax(self.output,axis=1),self.train_data[1])
-			out_err = self.mse_prime(np.argmax(self.output,axis=1),self.train_data[1])
+			self.error = self.mse(self.train_data[1],self.output)
+			out_err = self.mse_prime(self.train_data[1],self.output)
+			#print(out_err)
 			for Layer in reversed(self.Layers) :
 				if Layer.__Name__ == 'Dense' :
-					out_err = self.mse_prime(out_err,self.train_data[1])
+					out_err = Layer.feed_backward(out_err,self.lr)
+
+				# if Layer.__type__ == 'pool' or Layer.__type__ == 'convolving' :
+				# 	Layer.plotImg(Layer.output)
 			print('Accuracy :',self.accuracy , 'Error :' , self.error)
-			print(self.output)
+			#print(self.output)
 
 	def mse(self,y_true, y_pred):
 		"""
@@ -112,9 +123,13 @@ class Sequential() :
 		return np.mean(np.power(y_true - y_pred, 2))
 
 	def mse_prime(self,y_true, y_pred):
+		#print(y_true,y_pred)
 		return 2 * (y_pred - y_true) / y_pred.size
 
 	def Summary(self) :
+		"""
+			Summary of Neural Network
+		"""
 		print('Layer\t\t\tInput Shape\t\tOutput Shape')
 		for Layer in self.Layers :
 			Layer.Summary()
@@ -123,6 +138,10 @@ class Sequential() :
 		for Layer in self.Layers :
 			if Layer.__type__ == 'pool' or Layer.__type__ == 'convolving' :
 				Layer.plotImg(Layer.output)
+
+	def predict(self,X) :
+		return self.feed(X)
+
 
 def main() :
 	model = Sequential()
@@ -135,7 +154,7 @@ def main() :
 	model.add(MaxPool2D(KERNEL_SIZE=5,STRIDES=2,input_shape=model.output_shape)) # MaxPool layer feed
 	model.add(Flatten(input_shape=model.output_shape))
 	model.add(Dense(32,ACTIVATION_FUNCTION='ReLU',input_shape=model.output_shape))
-	model.add(Dense(2,ACTIVATION_FUNCTION='Sigmoid',input_shape=model.output_shape))
+	model.add(Dense(2,ACTIVATION_FUNCTION='Softmax',input_shape=model.output_shape))
 	model.Summary()
 	X_train = []
 	Y_train = []
@@ -146,9 +165,12 @@ def main() :
 			img = cv2.imread(i+j)
 			img = cv2.resize(img,(shape[:2]))
 			X_train.append(img/255.)
-			Y_train.append(Path.index(i))
+			if Path.index(i) == 1 :
+				Y_train.append([0,1])
+			else :
+				Y_train.append([1,0])
 			co += 1
-			if co == 1 :
+			if co == 20 :
 				break
 	X_train = np.array(X_train)
 	Y_train = np.array(Y_train)
@@ -156,8 +178,12 @@ def main() :
 	model.fit(train_data=(X_train,Y_train),epochs=10)
 	#model.plotImg()
 	#print(model.output)
+	print(model.predict(X_train[0]))
 
 if __name__ == '__main__':
+	"""
+		Importing Layers and Activations
+	"""
 	from Layers.Layer_Input import Input
 	from Layers.Layer_Conv import Conv2D
 	from Layers.Layer_Pool import MaxPool2D
